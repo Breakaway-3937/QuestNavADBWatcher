@@ -42,8 +42,8 @@ public class QuestNavADBWatcher {
     public void start() {
         
         executor.schedule(this::openPort, 0, TimeUnit.SECONDS); //ensure Quest is in TCP mode on 5802 port
-        executor.schedule(this::connectADB, 0, TimeUnit.SECONDS); //ensure connection to Quest
-        executor.scheduleAtFixedRate(this::poll, 0, POLL_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        executor.schedule(this::connectADB, 1, TimeUnit.SECONDS); //ensure connection to Quest
+        executor.scheduleAtFixedRate(this::poll, 5, POLL_INTERVAL_MS, TimeUnit.MILLISECONDS);
         
     }
 
@@ -60,10 +60,11 @@ public class QuestNavADBWatcher {
                 return;
             }
 
-            Process p = new ProcessBuilder(ADB_PATH, "tcpip", "5802")
-                    .redirectErrorStream(true)
-                    .start();
-            p.waitFor(3, TimeUnit.SECONDS);
+            ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "tcpip", "5802");
+                    pb.environment().put("HOME", "/home/lvuser");
+                    pb.redirectErrorStream(true);
+            
+            Process p = pb.start();
             
         } catch (Exception e) {
             System.err.println("[QuestNavADBWatcher] ADB tcpip command failed: " + e.getMessage());
@@ -79,10 +80,11 @@ public class QuestNavADBWatcher {
                 return;
             }
 
-            Process p = new ProcessBuilder(ADB_PATH, "connect", QUEST_ADB_ADDRESS)
-                    .redirectErrorStream(true)
-                    .start();
-            p.waitFor(3, TimeUnit.SECONDS);
+            ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "connect", QUEST_ADB_ADDRESS);
+                    pb.environment().put("HOME", "/home/lvuser");
+                    pb.redirectErrorStream(true);
+            
+            Process p = pb.start();
             
         } catch (Exception e) {
             System.err.println("[QuestNavADBWatcher] ADB connect failed: " + e.getMessage());
@@ -145,11 +147,11 @@ public class QuestNavADBWatcher {
                 return;
             }
 
-            new ProcessBuilder(ADB_PATH, "-s", QUEST_ADB_ADDRESS,
-                    "shell", "am", "start",
-                    "-n", "gg.QuestNav.QuestNav/com.unity3d.player.UnityPlayerGameActivity")
-                    .redirectErrorStream(true)
-                    .start();
+            ProcessBuilder pb = new ProcessBuilder(ADB_PATH, "-s", QUEST_ADB_ADDRESS, "shell", "am", "start", "-n", "gg.QuestNav.QuestNav/com.unity3d.player.UnityPlayerGameActivity");
+                    pb.environment().put("HOME", "/home/lvuser");
+                    pb.redirectErrorStream(true);
+            
+            Process p = pb.start();
 
         } catch (Exception e) {
             System.err.println("[QuestNavADBWatcher] Failed to execute ADB command: " + e.getMessage());
